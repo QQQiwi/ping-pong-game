@@ -1,0 +1,27 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(391,5): warning MSB8028: промежуточный каталог (x64\Debug\) содержит файлы, которые используются совместно с другим проектом (PingPongGame.vcxproj).  Это может привести к ошибкам очистки и перестроения.
+  Source.cpp
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(57): warning C4244: инициализация: преобразование "T" в "int", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(58): warning C4244: инициализация: преобразование "T" в "int", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(99): warning C4244: аргумент: преобразование "float" в "T", возможна потеря данных
+          with
+          [
+              T=int
+          ]
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(98): warning C4244: аргумент: преобразование "float" в "T", возможна потеря данных
+          with
+          [
+              T=int
+          ]
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(112): warning C4244: аргумент: преобразование "unsigned int" в "float", возможна потеря данных
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(113): warning C4244: аргумент: преобразование "unsigned int" в "float", возможна потеря данных
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(130): warning C4244: аргумент: преобразование "unsigned int" в "float", возможна потеря данных
+c:\my-university-documents\ping-pong-game\pingponggame (mvs)\pingponggame\source.cpp(133): warning C4244: аргумент: преобразование "unsigned int" в "float", возможна потеря данных
+  PingPongGame.vcxproj -> C:\My-University-Documents\ping-pong-game\PingPongGame (MVS)\x64\Debug\PingPongGame (MVS).exe
