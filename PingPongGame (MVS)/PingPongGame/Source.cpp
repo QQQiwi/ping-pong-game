@@ -1,7 +1,9 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
 #include <iostream>
 #include <string>
+
 
 class Paddle
 {
@@ -50,7 +52,7 @@ public:
 	}
 
 	// check of position and so on
-	void check(float window_height)
+	void check()
 	{
 		// by this getter i can take position of my entities
 		sf::Vector2f position = this->sprite.getPosition();
@@ -100,6 +102,85 @@ public:
 	}
 };
 
+class Ball
+{
+public:
+	float speed = 0.1f;
+	float window_width;
+	float window_height;
+	bool move_to_right;
+
+	sf::Vector2f last_position;
+	float ball_size = 10.f;
+
+	// create test shape of Ball
+	sf::CircleShape shape;
+
+	// constructor of object Paddle
+	Ball(bool move_to_right, float player_window_width, float player_window_height)
+	{
+		this->move_to_right = move_to_right;
+
+		shape.setRadius(ball_size);
+		shape.setFillColor(sf::Color(255, 0, 0));
+
+		sf::Vector2f center(player_window_width / 2.f, player_window_height / 2.f);
+
+		// position
+		shape.setPosition(center);
+		
+		last_position = center;
+		if (move_to_right)
+		{
+			last_position.x -= speed;
+		}
+		else
+		{
+			last_position.x += speed;
+		}
+	};
+
+	void check(bool &move_to_right, Paddle cur_paddle)
+	{
+		// by this getter i can take position of my entities
+		sf::Vector2f position = this->shape.getPosition();
+		float cur_x = position.x;
+		float cur_y = position.y;
+
+		//float last_x = cur_x;
+		//float last_y = cur_y;
+
+		this->shape.move(cur_x - last_position.x, cur_y - last_position.y);
+
+		if (move_to_right)
+		{
+			last_position.x = cur_x;
+			last_position.y = cur_y;
+
+			sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
+
+			// if ball is touched by paddle - he change direction
+			if (cur_x + 2 * ball_size >= paddle_position.x && cur_y >= paddle_position.y && cur_y <= paddle_position.y + cur_paddle.window_height)
+			{
+				move_to_right = !move_to_right;
+			}
+		}
+		else
+		{
+			last_position.x = cur_x;
+			last_position.y = cur_y;
+
+			sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
+
+			// if ball is touched by paddle - he change direction
+			if (cur_x + 2 * ball_size <= paddle_position.x && cur_y >= paddle_position.y && cur_y <= paddle_position.y + cur_paddle.window_height)
+			{
+				move_to_right = !move_to_right;
+			}
+		}
+	}
+};
+
 int main()
 {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "Ping Pong");
@@ -109,8 +190,11 @@ int main()
 	unsigned int window_width = size.x;
 	unsigned int window_height = size.y;
 
+	bool move_to_right = false;
+
 	Paddle first_player("Ivan", true, false, window_width, window_height);
 	Paddle second_player("Kekus", false, false, window_width, window_height);
+	Ball kekus(move_to_right, window_width, window_height);
 
 	// run the program as long as the window is open
 	while (window.isOpen())
@@ -127,11 +211,21 @@ int main()
 		// clear the window with black color
         window.clear(sf::Color::Black);
 		
-		first_player.check(window_height);
+		first_player.check();
 		window.draw(first_player.sprite);
 
-		second_player.check(window_height);
+		second_player.check();
 		window.draw(second_player.sprite);
+
+		if (move_to_right)
+		{
+			kekus.check(move_to_right, second_player);
+		}
+		else
+		{
+			kekus.check(move_to_right, first_player);
+		}
+		window.draw(kekus.shape);
 
         // end the current frame
         window.display();
