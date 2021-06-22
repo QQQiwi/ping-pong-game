@@ -4,50 +4,61 @@
 #include <iostream>
 #include <string>
 
+sf::RenderWindow window(sf::VideoMode(800, 600), "Ping Pong");
+
+// get the size of the window
+sf::Vector2u size = window.getSize();
+unsigned int windowWidth = size.x;
+unsigned int windowHeight = size.y;
+
+sf::Vector2f center(windowWidth / 2.f, windowHeight / 2.f);
 
 class Paddle
 {
 public:
 	std::string name;
-	bool is_left;
-	bool is_bot;
+	bool isLeft;
+	bool isBot;
 	int score = 0;
-	float window_height;
+	// it contains paddle current coordinates
+	float curX;
+	float curY;
+
+	sf::Vector2f centerCoordinates;
 
 	//Left coordinate of the rectangle
-	float sprite_left = 10.f;
+	float spriteLeft = 10.f;
 	//Right coordinate of the rectangle
-	float sprite_right = 10.f;
+	float spriteRight = 10.f;
 	//Width of the rectangle
-	float sprite_width = 8.f;
+	float spriteWidth = 8.f;
 	//Height of the rectangle
-	float sprite_height = 100.f;
+	float spriteHeight = 100.f;
 
 	// create test sprite of Paddle
 	sf::Sprite sprite;
 
 	// constructor of object Paddle
-	Paddle(std::string player_name, bool player_is_left, bool player_is_bot, float window_width, float player_window_height)
+	Paddle(std::string playerName, bool playerIsLeft, bool playerIsBot)
 	{
-		name = player_name;
-		is_left = player_is_left;
-		is_bot = player_is_bot;
-		window_height = player_window_height;
+		name = playerName;
+		isLeft = playerIsLeft;
+		isBot = playerIsBot;
 
 		sf::Texture texture;
 		sprite.setTexture(texture);
 		// by this setter i can change color of my entities
 		sprite.setColor(sf::Color(0, 255, 0)); // this is green
 
-		if (is_left)
+		if (isLeft)
 		{
 			// position
-			sprite.setPosition(sf::Vector2f(window_width*0.01f, window_height / 2.f));
+			sprite.setPosition(sf::Vector2f(windowWidth*0.01f, windowHeight / 2.f));
 		}
 		else
 		{
 			// position
-			sprite.setPosition(sf::Vector2f(window_width - window_width*0.02f, window_height / 2.f));
+			sprite.setPosition(sf::Vector2f(windowWidth - windowWidth * 0.02f, windowHeight / 2.f));
 		}
 	}
 
@@ -56,14 +67,18 @@ public:
 	{
 		// by this getter i can take position of my entities
 		sf::Vector2f position = this->sprite.getPosition();
-		int sprite_x = position.x;
-		int sprite_y = position.y;
+		curX = position.x;
+		curY = position.y;
 
-		if (is_left)
+		// calculation center coordinates of paddle
+		centerCoordinates.x = curX;
+		centerCoordinates.y = curY + spriteHeight /2.f;
+
+		if (isLeft)
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
-				if (!(sprite_y == window_height - this->sprite_height))
+				if (curY <= windowHeight - this->spriteHeight)
 				{
 					// left key is pressed: move our character
 					this->sprite.move(0.f, 0.1f);
@@ -71,7 +86,7 @@ public:
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 			{
-				if (!(sprite_y == 0))
+				if (curY >= 0)
 				{
 					// left key is pressed: move our character
 					this->sprite.move(0.f, -0.1f);
@@ -82,7 +97,7 @@ public:
 		{
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				if (!(sprite_y == window_height - this->sprite_height))
+				if (curY <= windowHeight - this->spriteHeight)
 				{
 					// left key is pressed: move our character
 					this->sprite.move(0.f, 0.1f);
@@ -90,111 +105,157 @@ public:
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				if (!(sprite_y == 0))
+				if (curY >= 0)
 				{
 					// left key is pressed: move our character
 					this->sprite.move(0.f, -0.1f);
 				}
 			}
 		}
-		this->sprite.setTextureRect(sf::IntRect(this->sprite_left, this->sprite_right,
-			this->sprite_width, this->sprite_height));
+		this->sprite.setTextureRect(sf::IntRect(this->spriteLeft, this->spriteRight,
+			this->spriteWidth, this->spriteHeight));
 	}
 };
 
 class Ball
 {
 public:
-	float speed = 0.1f;
-	float window_width;
-	float window_height;
-	bool move_to_right;
+	float speed = 0.07f;
+	//bool moveToRight;
 
-	sf::Vector2f last_position;
-	float ball_size = 10.f;
+	// it contains ball current coordinates
+	float curX;
+	float curY;
+
+	sf::Vector2f lastPosition;
+	float ballRadius = 10.f;
 
 	// create test shape of Ball
 	sf::CircleShape shape;
-
-	// constructor of object Paddle
-	Ball(bool move_to_right, float player_window_width, float player_window_height)
+	
+	void cast(bool &moveToRight)
 	{
-		this->move_to_right = move_to_right;
-
-		shape.setRadius(ball_size);
-		shape.setFillColor(sf::Color(255, 0, 0));
-
-		sf::Vector2f center(player_window_width / 2.f, player_window_height / 2.f);
-
 		// position
 		shape.setPosition(center);
-		
-		last_position = center;
-		if (move_to_right)
+
+		lastPosition = center;
+		if (moveToRight)
 		{
-			last_position.x -= speed;
+			lastPosition.x -= speed;
 		}
 		else
 		{
-			last_position.x += speed;
+			lastPosition.x += speed;
 		}
+	}
+
+	// constructor of object Ball
+	Ball(bool &moveToRight)
+	{
+		//this->moveToRight = moveToRight;
+
+		shape.setRadius(ballRadius);
+		shape.setFillColor(sf::Color(255, 0, 0));
+
+		cast(moveToRight);
 	};
 
-	void check(bool &move_to_right, Paddle cur_paddle)
+	void paddleTouch(bool &moveToRight, Paddle &curPaddle)
 	{
-		// by this getter i can take position of my entities
+		float paddleCurX = curPaddle.curX;
+		float paddleCurY = curPaddle.curY;
+
+		bool isBallOverPaddle = (curY + 2 * ballRadius >= paddleCurY && curY <= paddleCurY + curPaddle.spriteHeight);
+
+		if (!moveToRight && curX <= paddleCurX + curPaddle.spriteWidth && isBallOverPaddle)
+		{
+			sf::Vector2f pointCenter = curPaddle.centerCoordinates - sf::Vector2f(ballRadius, ballRadius);
+
+			if (pointCenter.y > curY)
+			{
+				lastPosition.y = curY + speed;
+			}
+			if (pointCenter.y < curY)
+			{
+				lastPosition.y = curY - speed;
+			}
+
+			lastPosition.x = curX - speed;
+			moveToRight = !moveToRight;
+		}
+		else if (moveToRight && curX + 2 * ballRadius >= paddleCurX && isBallOverPaddle)
+		{
+			sf::Vector2f pointCenter = curPaddle.centerCoordinates - sf::Vector2f(ballRadius, ballRadius);
+
+			if (pointCenter.y > curY)
+			{
+				lastPosition.y = curY + speed;
+			}
+			if (pointCenter.y < curY)
+			{
+				lastPosition.y = curY - speed;
+			}
+			lastPosition.x = curX + speed;
+			moveToRight = !moveToRight;
+		}
+	}
+
+	void wallTouch()
+	{
+		if (curY + 2*ballRadius >= windowHeight)
+		{
+			lastPosition.y = curY + speed;
+		}
+		if (curY <= 0)
+		{
+			lastPosition.y = curY - speed;
+		}
+	}
+
+	void check(bool &moveToRight, Paddle &curPaddle)
+	{
 		sf::Vector2f position = this->shape.getPosition();
-		float cur_x = position.x;
-		float cur_y = position.y;
+		curX = position.x;
+		curY = position.y;
 
-		//float last_x = cur_x;
-		//float last_y = cur_y;
+		// if ball is touched by paddle - he change direction
+		paddleTouch(moveToRight, curPaddle);
+		// if ball touch wall - he also change direction
+		wallTouch();
 
-		this->shape.move(cur_x - last_position.x, cur_y - last_position.y);
+		this->shape.move(curX - lastPosition.x, curY - lastPosition.y);
 
-		if (move_to_right)
-		{
-			last_position.x = cur_x;
-			last_position.y = cur_y;
-
-			sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
-
-			// if ball is touched by paddle - he change direction
-			if (cur_x + 2 * ball_size >= paddle_position.x && cur_y >= paddle_position.y && cur_y <= paddle_position.y + cur_paddle.window_height)
-			{
-				move_to_right = !move_to_right;
-			}
-		}
-		else
-		{
-			last_position.x = cur_x;
-			last_position.y = cur_y;
-
-			sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
-
-			// if ball is touched by paddle - he change direction
-			if (cur_x + 2 * ball_size <= paddle_position.x && cur_y >= paddle_position.y && cur_y <= paddle_position.y + cur_paddle.window_height)
-			{
-				move_to_right = !move_to_right;
-			}
-		}
+		lastPosition.x = curX;
+		lastPosition.y = curY;
 	}
 };
 
+void isOut(Ball &ball, int &firstPlayerScore, int &secondPlayerScore, bool &moveToRight)
+{
+	if (ball.curX >= windowWidth)
+	{
+		firstPlayerScore++;
+		//ball.moveToRight = !ball.moveToRight;
+		ball.cast(moveToRight);
+		std::cout << "first Player Score: " << firstPlayerScore << ' ';
+	}
+	else if (ball.curX <= 0)
+	{
+		secondPlayerScore++;
+		//ball.moveToRight = !ball.moveToRight;
+		ball.cast(moveToRight);
+		std::cout << "second Player Score: " << secondPlayerScore << ' ';
+	}
+}
+
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Ping Pong");
+	// it set first direction of ball's move
+	bool moveToRight = true;
 
-	// get the size of the window
-	sf::Vector2u size = window.getSize();
-	unsigned int window_width = size.x;
-	unsigned int window_height = size.y;
-
-	bool move_to_right = false;
-
-	Paddle first_player("Ivan", true, false, window_width, window_height);
-	Paddle second_player("Kekus", false, false, window_width, window_height);
-	Ball kekus(move_to_right, window_width, window_height);
+	Paddle firstPlayer("Ivan", true, false);
+	Paddle secondPlayer("Kekus", false, false);
+	Ball ball(moveToRight);
 
 	// run the program as long as the window is open
 	while (window.isOpen())
@@ -209,28 +270,31 @@ int main()
 		}
 
 		// clear the window with black color
-        window.clear(sf::Color::Black);
-		
-		first_player.check();
-		window.draw(first_player.sprite);
+		window.clear(sf::Color::Black);
 
-		second_player.check();
-		window.draw(second_player.sprite);
+		// check position of player's paddles
+		firstPlayer.check();
+		window.draw(firstPlayer.sprite);
 
-		if (move_to_right)
+		secondPlayer.check();
+		window.draw(secondPlayer.sprite);
+
+		// if the ball is moving to left - then i should check 
+		// if first player's paddle was touch a ball
+		if (moveToRight)
 		{
-			kekus.check(move_to_right, second_player);
+			ball.check(moveToRight, secondPlayer);
 		}
 		else
 		{
-			kekus.check(move_to_right, first_player);
+			ball.check(moveToRight, firstPlayer);
 		}
-		window.draw(kekus.shape);
+		//ball.shape.setPosition(secondPlayer.centerCoordinates - sf::Vector2f(ball.ballRadius, ball.ballRadius));
+		window.draw(ball.shape);
+		isOut(ball, firstPlayer.score, secondPlayer.score, moveToRight);
 
-        // end the current frame
-        window.display();
-
+		// end the current frame
+		window.display();
 	}
-
 	return 0;
 }

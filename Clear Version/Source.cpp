@@ -104,13 +104,13 @@ public:
 class Ball
 {
 public:
-	float speed = 0.1f;
+	float speed = 0.3f;
 	float window_width;
 	float window_height;
 	bool move_to_right;
 
 	sf::Vector2f last_position;
-	float ball_size = 10.f;
+	float ball_radius = 10.f;
 
 	// create test shape of Ball
 	sf::CircleShape shape;
@@ -123,7 +123,7 @@ public:
 		window_width = player_window_width;
 		window_height = player_window_height;
 
-		shape.setRadius(ball_size);
+		shape.setRadius(ball_radius);
 		shape.setFillColor(sf::Color(255, 0, 0));
 
 		sf::Vector2f center(player_window_width / 2.f, player_window_height / 2.f);
@@ -144,31 +144,32 @@ public:
 
 	void check(bool &move_to_right, Paddle cur_paddle)
 	{
-		// by this getter i can take position of my entities
 		sf::Vector2f position = this->shape.getPosition();
-		sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
+		float ball_cur_x = position.x;
+		float ball_cur_y = position.y;
 
-		float cur_x = position.x;
-		float cur_y = position.y;
+		sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
+		float paddle_cur_x = paddle_position.x;
+		float paddle_cur_y = paddle_position.y;
 
 		// if ball is touched by paddle - he change direction
-		bool is_ball_over_paddle = (cur_y + 2*ball_size >= paddle_position.y && cur_y <= paddle_position.y + cur_paddle.sprite_height);
+		bool is_ball_over_paddle = (ball_cur_y + 2*ball_radius >= paddle_cur_y && ball_cur_y <= paddle_cur_y + cur_paddle.sprite_height);
 
-		if (move_to_right && cur_x + 2*ball_size >= paddle_position.x && is_ball_over_paddle)
+		if (!move_to_right && ball_cur_x <= paddle_cur_x + cur_paddle.sprite_width && is_ball_over_paddle)
 		{
-			last_position.x = cur_x + speed;
+			last_position.x = ball_cur_x - speed;
 			move_to_right = !move_to_right;
 		}
-		if (!move_to_right && cur_x <= paddle_position.x + cur_paddle.sprite_width && is_ball_over_paddle)
+		else if (move_to_right && ball_cur_x + 2*ball_radius >= paddle_cur_x && is_ball_over_paddle)
 		{
-			last_position.x = cur_x - speed;
+			last_position.x = ball_cur_x + speed;
 			move_to_right = !move_to_right;
 		}
 
-		this->shape.move(cur_x - last_position.x, cur_y - last_position.y);
+		this->shape.move(ball_cur_x - last_position.x, ball_cur_y - last_position.y);
 		
-		last_position.x = cur_x;
-		last_position.y = cur_y;
+		last_position.x = ball_cur_x;
+		last_position.y = ball_cur_y;
 			
 	}
 	// out
