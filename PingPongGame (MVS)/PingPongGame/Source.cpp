@@ -3,6 +3,9 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <iostream>
 #include <string>
+#include <Windows.h>
+#include <ctime>
+#include <SFML/Audio.hpp>
 
 sf::RenderWindow window(sf::VideoMode(800, 600), "Ping Pong");
 
@@ -12,6 +15,13 @@ unsigned int windowWidth = size.x;
 unsigned int windowHeight = size.y;
 
 sf::Vector2f center(windowWidth / 2.f, windowHeight / 2.f);
+
+// create soundBuffer for making sounds there are possible
+sf::SoundBuffer buffer;
+sf::Sound sound;
+
+// it set first direction of ball's move
+bool moveToRight = true;
 
 class Paddle
 {
@@ -63,7 +73,7 @@ public:
 	}
 
 	// check of position and so on
-	void check()
+	void check(float ballLastY)
 	{
 		// by this getter i can take position of my entities
 		sf::Vector2f position = this->sprite.getPosition();
@@ -73,45 +83,57 @@ public:
 		// calculation center coordinates of paddle
 		centerCoordinates.x = curX;
 		centerCoordinates.y = curY + spriteHeight /2.f;
-
-		if (isLeft)
+		if (isBot)
 		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			srand(time(NULL));
+			float inaccuracy = rand() % 25;
+			float inacryAndBallY = inaccuracy + ballLastY;
+			if (inacryAndBallY >= 0 && inacryAndBallY <= windowHeight - this->spriteHeight)
 			{
-				if (curY <= windowHeight - this->spriteHeight)
-				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, 0.1f);
-				}
-			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-			{
-				if (curY >= 0)
-				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, -0.1f);
-				}
+				
+				this->sprite.move(0.f, inacryAndBallY - curY);
 			}
 		}
 		else
-		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			if (isLeft)
 			{
-				if (curY <= windowHeight - this->spriteHeight)
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, 0.1f);
+					if (curY <= windowHeight - this->spriteHeight)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, 0.1f);
+					}
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+				{
+					if (curY >= 0)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, -0.1f);
+					}
 				}
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			else
 			{
-				if (curY >= 0)
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, -0.1f);
+					if (curY <= windowHeight - this->spriteHeight)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, 0.1f);
+					}
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+				{
+					if (curY >= 0)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, -0.1f);
+					}
 				}
 			}
-		}
+
 		this->sprite.setTextureRect(sf::IntRect(this->spriteLeft, this->spriteRight,
 			this->spriteWidth, this->spriteHeight));
 	}
@@ -133,7 +155,7 @@ public:
 	// create test shape of Ball
 	sf::CircleShape shape;
 	
-	void cast(bool &moveToRight)
+	void cast()
 	{
 		// position
 		shape.setPosition(center);
@@ -150,17 +172,17 @@ public:
 	}
 
 	// constructor of object Ball
-	Ball(bool &moveToRight)
+	Ball()
 	{
 		//this->moveToRight = moveToRight;
 
 		shape.setRadius(ballRadius);
 		shape.setFillColor(sf::Color(255, 0, 0));
 
-		cast(moveToRight);
+		cast();
 	};
 
-	void paddleTouch(bool &moveToRight, Paddle &curPaddle)
+	bool paddleTouch(Paddle &curPaddle)
 	{
 		float paddleCurX = curPaddle.curX;
 		float paddleCurY = curPaddle.curY;
@@ -182,6 +204,7 @@ public:
 
 			lastPosition.x = curX - speed;
 			moveToRight = !moveToRight;
+			return true;
 		}
 		else if (moveToRight && curX + 2 * ballRadius >= paddleCurX && isBallOverPaddle)
 		{
@@ -195,33 +218,50 @@ public:
 			{
 				lastPosition.y = curY - speed;
 			}
+
 			lastPosition.x = curX + speed;
 			moveToRight = !moveToRight;
+			return true;
 		}
+		return false;
 	}
 
-	void wallTouch()
+	bool wallTouch()
 	{
 		if (curY + 2*ballRadius >= windowHeight)
 		{
 			lastPosition.y = curY + speed;
+
+			return true;
 		}
 		if (curY <= 0)
 		{
 			lastPosition.y = curY - speed;
+
+			return true;
 		}
+		return false;
 	}
 
-	void check(bool &moveToRight, Paddle &curPaddle)
+	void check(Paddle &curPaddle)
 	{
 		sf::Vector2f position = this->shape.getPosition();
 		curX = position.x;
 		curY = position.y;
 
 		// if ball is touched by paddle - he change direction
-		paddleTouch(moveToRight, curPaddle);
+		//paddleTouch(moveToRight, curPaddle);
 		// if ball touch wall - he also change direction
-		wallTouch();
+		//wallTouch();
+
+		if (paddleTouch(curPaddle) || wallTouch())
+		{
+			if (!buffer.loadFromFile("sound/hit.ogg"))
+				std::cout << "FUCK";
+
+			sound.setBuffer(buffer);
+			sound.play();
+		}
 
 		this->shape.move(curX - lastPosition.x, curY - lastPosition.y);
 
@@ -230,68 +270,121 @@ public:
 	}
 };
 
-void isOut(Ball &ball, int &firstPlayerScore, int &secondPlayerScore, bool &moveToRight)
+void isOut(Ball &ball, int &firstPlayerScore, int &secondPlayerScore)
 {
 	if (ball.curX >= windowWidth)
 	{
 		firstPlayerScore++;
 		//ball.moveToRight = !ball.moveToRight;
-		ball.cast(moveToRight);
-		std::cout << "first Player Score: " << firstPlayerScore << ' ';
+		ball.cast();
+
+		if (!buffer.loadFromFile("sound/loseball.ogg"))
+			std::cout << "FUCK";
+
+		sound.setBuffer(buffer);
+		sound.play();
+
+		Sleep(2000);
 	}
 	else if (ball.curX <= 0)
 	{
 		secondPlayerScore++;
 		//ball.moveToRight = !ball.moveToRight;
-		ball.cast(moveToRight);
-		std::cout << "second Player Score: " << secondPlayerScore << ' ';
+		ball.cast();
+
+		if (!buffer.loadFromFile("sound/loseball.ogg"))
+			std::cout << "FUCK";
+
+		sound.setBuffer(buffer);
+		sound.play();
+
+		Sleep(2000);
 	}
+}
+
+void startGame(Paddle &firstPlayer, Paddle &secondPlayer, Ball &ball)
+{
+	// check position of player's paddles
+	firstPlayer.check(ball.lastPosition.y);
+	// draw player's paddles
+	window.draw(firstPlayer.sprite);
+
+	// check position of player's paddles
+	secondPlayer.check(ball.lastPosition.y);
+	// draw player's paddles
+	window.draw(secondPlayer.sprite);
+
+	// if the ball is moving to left - then i should check 
+	// if first player's paddle was touch a ball
+	if (moveToRight)
+	{
+		ball.check(secondPlayer);
+	}
+	else
+	{
+		ball.check(firstPlayer);
+	}
+
+	// draw ball
+	window.draw(ball.shape);
+	// checking if ball is out so we can increase someone's score
+	isOut(ball, firstPlayer.score, secondPlayer.score);
+}
+
+void mainMenu()
+{
+	sf::Text text;
+
+	sf::Font font;
+	if (!font.loadFromFile("arial.ttf"))
+	{
+		// error...
+	}
+
+	// select the font
+	text.setFont(font); // font is a sf::Font
 }
 
 int main()
 {
-	// it set first direction of ball's move
-	bool moveToRight = true;
+	// info about players:
+	// name
+	std::string firstPlayerName, secondPlayerName;
+	// position(true is left) and auto control(true is auto)
+	bool firstPlayerPosition, autoControl;
+	firstPlayerPosition = true, autoControl = true;
 
-	Paddle firstPlayer("Ivan", true, false);
-	Paddle secondPlayer("Kekus", false, false);
-	Ball ball(moveToRight);
+	// create objects
+	Paddle firstPlayer(firstPlayerName, firstPlayerPosition, autoControl);
+	Paddle secondPlayer(secondPlayerName, !firstPlayerPosition, autoControl);
+	Ball ball;
 
 	// run the program as long as the window is open
 	while (window.isOpen())
 	{
 		// check all the window's events that were triggered since the last iteration of the loop
-		sf::Event event;
-		while (window.pollEvent(event))
+		sf::Event game;
+		while (window.pollEvent(game))
 		{
 			// "close requested" event: we close the window
-			if (event.type == sf::Event::Closed)
+			if (game.type == sf::Event::Closed)
 				window.close();
 		}
 
+		//mainMenu();
+
+		// i don't know how can i make pause and resume in game so let it be comments //
+		//if (game.type == sf::Event::LostFocus)
+		//	myGame.pause();
+
+		//if (game.type == sf::Event::GainedFocus)
+		//	myGame.resume();
 		// clear the window with black color
+
 		window.clear(sf::Color::Black);
-
-		// check position of player's paddles
-		firstPlayer.check();
-		window.draw(firstPlayer.sprite);
-
-		secondPlayer.check();
-		window.draw(secondPlayer.sprite);
-
-		// if the ball is moving to left - then i should check 
-		// if first player's paddle was touch a ball
-		if (moveToRight)
-		{
-			ball.check(moveToRight, secondPlayer);
-		}
-		else
-		{
-			ball.check(moveToRight, firstPlayer);
-		}
-		//ball.shape.setPosition(secondPlayer.centerCoordinates - sf::Vector2f(ball.ballRadius, ball.ballRadius));
-		window.draw(ball.shape);
-		isOut(ball, firstPlayer.score, secondPlayer.score, moveToRight);
+		
+		// actually starting game with two players
+		startGame(firstPlayer, secondPlayer, ball);
 
 		// end the current frame
 		window.display();
