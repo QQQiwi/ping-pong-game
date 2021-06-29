@@ -3,228 +3,417 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <iostream>
 #include <string>
+// #include <Windows.h>
+#include <ctime>
+#include <SFML/Audio.hpp>
+
+sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Ping Pong");
+
+// get the size of the window
+sf::Vector2u size = window.getSize();
+unsigned int windowWidth = size.x;
+unsigned int windowHeight = size.y;
+
+sf::Vector2f center(windowWidth / 2.f, windowHeight / 2.f);
+
+// create soundBuffer for making sounds there are possible
+sf::SoundBuffer buffer;
+sf::Sound sound;
+
+// it set first direction of ball's move
+bool moveToRight = true;
 
 class Paddle
 {
 public:
 	std::string name;
-	bool is_left;
-	bool is_bot;
+	bool isLeft;
+	bool isBot;
+	float paddleSpeed;
 	int score = 0;
-	float window_height;
+	// it contains paddle current coordinates
+	float curX;
+	float curY;
+
+	sf::Vector2f centerCoordinates;
 
 	//Left coordinate of the rectangle
-	float sprite_left = 10.f;
+	float spriteLeft = 10.f;
 	//Right coordinate of the rectangle
-	float sprite_right = 10.f;
+	float spriteRight = 10.f;
 	//Width of the rectangle
-	float sprite_width = 8.f;
+	float spriteWidth = 8.f;
 	//Height of the rectangle
-	float sprite_height = 100.f;
+	float spriteHeight = 100.f;
 
 	// create test sprite of Paddle
 	sf::Sprite sprite;
 
 	// constructor of object Paddle
-	Paddle(std::string player_name, bool player_is_left, bool player_is_bot, float window_width, float player_window_height)
+	Paddle(std::string name, bool isLeft, bool isBot, float paddleSpeed)
 	{
-		name = player_name;
-		is_left = player_is_left;
-		is_bot = player_is_bot;
-		window_height = player_window_height;
+		this->name = name;
+		this->isLeft = isLeft;
+		this->isBot = isBot;
+		this->paddleSpeed = paddleSpeed;
 
 		sf::Texture texture;
 		sprite.setTexture(texture);
 		// by this setter i can change color of my entities
 		sprite.setColor(sf::Color(0, 255, 0)); // this is green
 
-		if (is_left)
+		if (isLeft)
 		{
 			// position
-			sprite.setPosition(sf::Vector2f(window_width*0.01f, window_height / 2.f));
+			sprite.setPosition(sf::Vector2f(windowWidth*0.01f, windowHeight / 2.f));
 		}
 		else
 		{
 			// position
-			sprite.setPosition(sf::Vector2f(window_width - window_width*0.02f, window_height / 2.f));
+			sprite.setPosition(sf::Vector2f(windowWidth - windowWidth * 0.02f, windowHeight / 2.f));
 		}
 	}
 
 	// check of position and so on
-	void check()
+	void check(float ballLastY)
 	{
 		// by this getter i can take position of my entities
 		sf::Vector2f position = this->sprite.getPosition();
-		int sprite_x = position.x;
-		int sprite_y = position.y;
+		curX = position.x;
+		curY = position.y;
 
-		if (is_left)
+		// calculation center coordinates of paddle
+		centerCoordinates.x = curX;
+		centerCoordinates.y = curY + spriteHeight /2.f;
+		
+		if (isBot)
 		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			// there is im tried to make some interference in movements of bots //
+			// making them easier if i can //
+			// srand(time(NULL));
+			// float inaccuracy = rand() % 25;
+			// float inacryAndBallY = inaccuracy + ballLastY;
+			// if (inacryAndBallY >= 0 && inacryAndBallY <= windowHeight - this->spriteHeight)
+			// {
+				
+			//		this->sprite.move(0.f, inacryAndBallY - curY);
+			// }
+			if (ballLastY >= 0 && ballLastY <= windowHeight - this->spriteHeight)
 			{
-				if (!(sprite_y == window_height - this->sprite_height))
-				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, 0.1f);
-				}
-			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-			{
-				if (!(sprite_y == 0))
-				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, -0.1f);
-				}
+				
+				this->sprite.move(0.f, ballLastY - curY);
 			}
 		}
 		else
-		{
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			if (isLeft)
 			{
-				if (!(sprite_y == window_height - this->sprite_height))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, 0.1f);
+					if (curY <= windowHeight - this->spriteHeight)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, paddleSpeed);
+					}
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+				{
+					if (curY >= 0)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, -paddleSpeed);
+					}
 				}
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			else
 			{
-				if (!(sprite_y == 0))
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 				{
-					// left key is pressed: move our character
-					this->sprite.move(0.f, -0.1f);
+					if (curY <= windowHeight - this->spriteHeight)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, paddleSpeed);
+					}
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+				{
+					if (curY >= 0)
+					{
+						// left key is pressed: move our character
+						this->sprite.move(0.f, -paddleSpeed);
+					}
 				}
 			}
-		}
-		this->sprite.setTextureRect(sf::IntRect(this->sprite_left, this->sprite_right,
-			this->sprite_width, this->sprite_height));
+
+		this->sprite.setTextureRect(sf::IntRect(this->spriteLeft, this->spriteRight,
+			this->spriteWidth, this->spriteHeight));
 	}
 };
 
 class Ball
 {
 public:
-	float speed = 0.3f;
-	float window_width;
-	float window_height;
-	bool move_to_right;
+	float speed = 0.1f;
+	//bool moveToRight;
 
-	sf::Vector2f last_position;
-	float ball_radius = 10.f;
+	// it contains ball current coordinates
+	float curX;
+	float curY;
+
+	sf::Vector2f lastPosition;
+	float ballRadius = 10.f;
 
 	// create test shape of Ball
 	sf::CircleShape shape;
-
-	// constructor of object Paddle
-	Ball(bool move_to_right, float player_window_width, float player_window_height)
+	
+	void cast()
 	{
-		this->move_to_right = move_to_right;
-
-		window_width = player_window_width;
-		window_height = player_window_height;
-
-		shape.setRadius(ball_radius);
-		shape.setFillColor(sf::Color(255, 0, 0));
-
-		sf::Vector2f center(player_window_width / 2.f, player_window_height / 2.f);
-
 		// position
 		shape.setPosition(center);
-		
-		last_position = center;
-		if (move_to_right)
+
+		lastPosition = center;
+		if (moveToRight)
 		{
-			last_position.x -= speed;
+			lastPosition.x -= speed;
 		}
 		else
 		{
-			last_position.x += speed;
+			lastPosition.x += speed;
 		}
+	}
+
+	// constructor of object Ball
+	Ball()
+	{
+		//this->moveToRight = moveToRight;
+
+		shape.setRadius(ballRadius);
+		shape.setFillColor(sf::Color(255, 0, 0));
+
+		cast();
 	};
 
-	void check(bool &move_to_right, Paddle cur_paddle)
+	bool paddleTouch(Paddle &curPaddle)
+	{
+		float paddleCurX = curPaddle.curX;
+		float paddleCurY = curPaddle.curY;
+
+		bool isBallOverPaddle = (curY + 2 * ballRadius >= paddleCurY && curY <= paddleCurY + curPaddle.spriteHeight);
+
+		if (!moveToRight && curX <= paddleCurX + curPaddle.spriteWidth && isBallOverPaddle)
+		{
+			sf::Vector2f pointCenter = curPaddle.centerCoordinates - sf::Vector2f(ballRadius, ballRadius);
+
+			if (pointCenter.y > curY)
+			{
+				lastPosition.y = curY + speed;
+			}
+			if (pointCenter.y < curY)
+			{
+				lastPosition.y = curY - speed;
+			}
+
+			lastPosition.x = curX - speed;
+			moveToRight = !moveToRight;
+			return true;
+		}
+		else if (moveToRight && curX + 2 * ballRadius >= paddleCurX && isBallOverPaddle)
+		{
+			sf::Vector2f pointCenter = curPaddle.centerCoordinates - sf::Vector2f(ballRadius, ballRadius);
+
+			if (pointCenter.y > curY)
+			{
+				lastPosition.y = curY + speed;
+			}
+			if (pointCenter.y < curY)
+			{
+				lastPosition.y = curY - speed;
+			}
+
+			lastPosition.x = curX + speed;
+			moveToRight = !moveToRight;
+			return true;
+		}
+		return false;
+	}
+
+	bool wallTouch()
+	{
+		if (curY + 2*ballRadius >= windowHeight)
+		{
+			lastPosition.y = curY + speed;
+
+			return true;
+		}
+		if (curY <= 0)
+		{
+			lastPosition.y = curY - speed;
+
+			return true;
+		}
+		return false;
+	}
+
+	void check(Paddle &curPaddle)
 	{
 		sf::Vector2f position = this->shape.getPosition();
-		float ball_cur_x = position.x;
-		float ball_cur_y = position.y;
-
-		sf::Vector2f paddle_position = cur_paddle.sprite.getPosition();
-		float paddle_cur_x = paddle_position.x;
-		float paddle_cur_y = paddle_position.y;
+		curX = position.x;
+		curY = position.y;
 
 		// if ball is touched by paddle - he change direction
-		bool is_ball_over_paddle = (ball_cur_y + 2*ball_radius >= paddle_cur_y && ball_cur_y <= paddle_cur_y + cur_paddle.sprite_height);
+		//paddleTouch(moveToRight, curPaddle);
+		// if ball touch wall - he also change direction
+		//wallTouch();
 
-		if (!move_to_right && ball_cur_x <= paddle_cur_x + cur_paddle.sprite_width && is_ball_over_paddle)
+		if (paddleTouch(curPaddle) || wallTouch())
 		{
-			last_position.x = ball_cur_x - speed;
-			move_to_right = !move_to_right;
-		}
-		else if (move_to_right && ball_cur_x + 2*ball_radius >= paddle_cur_x && is_ball_over_paddle)
-		{
-			last_position.x = ball_cur_x + speed;
-			move_to_right = !move_to_right;
+			if (!buffer.loadFromFile("sound/hit.ogg"))
+				std::cout << "FUCK";
+
+			sound.setBuffer(buffer);
+			sound.play();
 		}
 
-		this->shape.move(ball_cur_x - last_position.x, ball_cur_y - last_position.y);
-		
-		last_position.x = ball_cur_x;
-		last_position.y = ball_cur_y;
-			
+		this->shape.move(curX - lastPosition.x, curY - lastPosition.y);
+
+		lastPosition.x = curX;
+		lastPosition.y = curY;
 	}
-	// out
 };
+
+void isOut(Ball &ball, int &firstPlayerScore, int &secondPlayerScore)
+{
+	if (ball.curX >= windowWidth)
+	{
+		firstPlayerScore++;
+		//ball.moveToRight = !ball.moveToRight;
+		ball.cast();
+
+		if (!buffer.loadFromFile("sound/loseball.ogg"))
+			std::cout << "FUCK";
+
+		sound.setBuffer(buffer);
+		sound.play();
+
+		// Sleep(2000);
+	}
+	else if (ball.curX <= 0)
+	{
+		secondPlayerScore++;
+		//ball.moveToRight = !ball.moveToRight;
+		ball.cast();
+
+		if (!buffer.loadFromFile("sound/loseball.ogg"))
+			std::cout << "FUCK";
+
+		sound.setBuffer(buffer);
+		sound.play();
+
+		// Sleep(2000);
+	}
+}
+
+void startGame(Paddle &firstPlayer, Paddle &secondPlayer, Ball &ball)
+{
+	// check position of player's paddles
+	firstPlayer.check(ball.lastPosition.y);
+	// draw player's paddles
+	window.draw(firstPlayer.sprite);
+
+	// check position of player's paddles
+	secondPlayer.check(ball.lastPosition.y);
+	// draw player's paddles
+	window.draw(secondPlayer.sprite);
+
+	// if the ball is moving to left - then i should check 
+	// if first player's paddle was touch a ball
+	if (moveToRight)
+	{
+		ball.check(secondPlayer);
+	}
+	else
+	{
+		ball.check(firstPlayer);
+	}
+	// draw ball
+	window.draw(ball.shape);
+	// checking if ball is out so we can increase someone's score
+	isOut(ball, firstPlayer.score, secondPlayer.score);
+}
+
+void mainMenu()
+{
+	sf::Text text;
+
+	sf::Font font;
+	if (!font.loadFromFile("textures/font.ttf"))
+	{
+		// error...
+	}
+
+	// select the font
+	text.setFont(font); // font is a sf::Font
+	
+	// set the string to display
+	text.setString("Welcome to the Ping Pong Game!");
+
+	// set the character size
+	text.setCharacterSize(100); // in pixels, not points!
+
+	float textWidth = text.getLocalBounds().width;
+	float textHeight = text.getLocalBounds().height;
+	// setOrigin can change point of drawing object
+	text.setOrigin(sf::Vector2f(textWidth / 2.f, textHeight / 2.f));
+	// set the color
+	text.setFillColor(sf::Color::Red);
+	// set the text style
+	text.setPosition(center.x, center.y / 4.f);
+
+	// inside the main loop, between window.clear() and window.display()
+	window.draw(text);
+}
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Ping Pong");
+	// info about players: name, position(true is left), auto control(true is auto), speed of movement of their paddle //
+	// std::string firstPlayerName, secondPlayerName;
+	// bool firstPlayerPosition, autoControl;
+	// firstPlayerPosition = true, autoControl = true;
+	// float paddleSpeed = 0.2;
 
-	// get the size of the window
-	sf::Vector2u size = window.getSize();
-	unsigned int window_width = size.x;
-	unsigned int window_height = size.y;
-
-	bool move_to_right = true;
-
-	Paddle first_player("Ivan", true, false, window_width, window_height);
-	Paddle second_player("Kekus", false, false, window_width, window_height);
-	Ball kekus(move_to_right, window_width, window_height);
+	// create objects //
+	//Paddle firstPlayer(firstPlayerName, firstPlayerPosition, autoControl, paddleSpeed);
+	//Paddle secondPlayer(secondPlayerName, !firstPlayerPosition, !autoControl, paddleSpeed);
+	//Ball ball;
 
 	// run the program as long as the window is open
 	while (window.isOpen())
 	{
 		// check all the window's events that were triggered since the last iteration of the loop
-		sf::Event event;
-		while (window.pollEvent(event))
+		sf::Event game;
+		while (window.pollEvent(game))
 		{
 			// "close requested" event: we close the window
-			if (event.type == sf::Event::Closed)
+			if (game.type == sf::Event::Closed)
 				window.close();
 		}
 
+		window.clear(sf::Color::Black);
+
+		mainMenu();
+		// break;
+
+		// i don't know yet how can i make pause and resume in game so let it be comments //
+		//if (game.type == sf::Event::LostFocus)
+		//	myGame.pause();
+		//if (game.type == sf::Event::GainedFocus)
+		//	myGame.resume();
 		// clear the window with black color
-        window.clear(sf::Color::Black);
 		
-		first_player.check();
-		window.draw(first_player.sprite);
+		// actually starting game with two players //
+		// startGame(firstPlayer, secondPlayer, ball);
 
-		second_player.check();
-		window.draw(second_player.sprite);
-
-		if (move_to_right)
-		{
-			kekus.check(move_to_right, second_player);
-		}
-		else
-		{
-			kekus.check(move_to_right, first_player);
-		}
-		window.draw(kekus.shape);
-
-        // end the current frame
-        window.display();
-
+		// end the current frame
+		window.display();
 	}
-
 	return 0;
 }
