@@ -375,15 +375,15 @@ void mainMenu()
 int main()
 {
 	// info about players: name, position(true is left), auto control(true is auto), speed of movement of their paddle //
-	// std::string firstPlayerName, secondPlayerName;
-	// bool firstPlayerPosition, autoControl;
-	// firstPlayerPosition = true, autoControl = true;
-	// float paddleSpeed = 0.2;
+	std::string firstPlayerName, secondPlayerName;
+	bool firstPlayerPosition, autoControl;
+	firstPlayerPosition = true, autoControl = true;
+	float paddleSpeed = 0.2;
 
 	// create objects //
-	//Paddle firstPlayer(firstPlayerName, firstPlayerPosition, autoControl, paddleSpeed);
-	//Paddle secondPlayer(secondPlayerName, !firstPlayerPosition, !autoControl, paddleSpeed);
-	//Ball ball;
+	Paddle firstPlayer(firstPlayerName, firstPlayerPosition, !autoControl, paddleSpeed);
+	Paddle secondPlayer(secondPlayerName, !firstPlayerPosition, !autoControl, paddleSpeed);
+	Ball ball;
 
 	// run the program as long as the window is open
 	while (window.isOpen())
@@ -399,7 +399,7 @@ int main()
 
 		window.clear(sf::Color::Black);
 
-		mainMenu();
+		// mainMenu();
 		// break;
 
 		// i don't know yet how can i make pause and resume in game so let it be comments //
@@ -410,7 +410,7 @@ int main()
 		// clear the window with black color
 		
 		// actually starting game with two players //
-		// startGame(firstPlayer, secondPlayer, ball);
+		startGame(firstPlayer, secondPlayer, ball);
 
 		// end the current frame
 		window.display();
