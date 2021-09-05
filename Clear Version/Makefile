@@ -3,6 +3,7 @@
 
 CC=g++
 CFLAGS=-Wall -Wpedantic -ggdb -std=c++11 -O0
+
 BUILD_DIR=build
 
 SRC = game/game.cpp

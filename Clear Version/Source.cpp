@@ -14,6 +14,8 @@ sf::Vector2u size = window.getSize();
 unsigned int windowWidth = size.x;
 unsigned int windowHeight = size.y;
 
+//window.
+
 sf::Vector2f center(windowWidth / 2.f, windowHeight / 2.f);
 
 // create soundBuffer for making sounds there are possible
